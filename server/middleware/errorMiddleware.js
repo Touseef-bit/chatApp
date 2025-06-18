@@ -1,8 +1,7 @@
 const sendError = (err, res) => {
-    const message = err.message
-    const statusCode = err.statusCode
-    const status = err.status
-
+    const message = err.message || 'Internal Server Error!'
+    const statusCode = err.statusCode || 500
+    const status = err.status || 'fail'
     return res.status(statusCode).json({
         success: status,
         message

@@ -6,19 +6,27 @@ const userSchema = new mongoose.Schema({
     username: {
         type: String,
         unique: true,
-        min: 5,
+        required: true,
+        minlength: [5, 'Username should be more than 5 characters!'],
         trim: true,
     },
     email: {
         type: String,
+        required: true,
         unique: true,
         trim: true,
     },
     password: {
         type: String,
-        min: 7,
+        required: true,
+        minlength: [7, 'Password should be more than 5 characters!'],
+
         trim: true,
     },
+    token: {
+        type: String,
+        default: undefined
+    }
 }, { timestamps: true })
 
 
@@ -27,9 +35,9 @@ const usermodel = new mongoose.model('user', userSchema)
 export default usermodel
 
 
-userSchema.pre('save', async function (next) {
-    if (!this.password.isModified()) return null;
-    const hashedPassword = await bcrypt.hash(this.password, 10)
-    this.password = hashedPassword
-    next()
-})
+// userSchema.pre('save', async function (next) {
+//     if (!this.password.isModified()) return null;
+//     const hashedPassword = await bcrypt.hash(this.password, 10)
+//     this.password = hashedPassword
+//     next()
+// })
