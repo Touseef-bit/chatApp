@@ -1,0 +1,25 @@
+# Ignore node_modules for backend
+server/node_modules/
+
+# Ignore environment variables
+.env
+
+# Ignore production build/output folders
+server/dist/
+server/build/
+
+# Logs
+server/logs/
+server/*.log
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE settings
+.vscode/
+.idea/
+
+# Optional: Tests and coverage
+server/coverage/
+server/.nyc_output/
