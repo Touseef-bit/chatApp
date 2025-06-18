@@ -20,6 +20,7 @@ Thumbs.db
 .vscode/
 .idea/
 
+
 # Optional: Tests and coverage
 server/coverage/
 server/.nyc_output/
