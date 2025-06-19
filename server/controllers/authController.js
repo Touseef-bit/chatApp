@@ -44,10 +44,9 @@ export const Login = async (req, res, next) => {
     if (!comparePassword) {
         return next(new appError("Email or Password is incorrect!", 400))
     }
-    const token = await createToken({ username: user.username, email })
     return res.status(200).json({
         success: true,
         message: 'Login Successfully!',
-        token
+        token: user.token  
     })
 }

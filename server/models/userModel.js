@@ -1,5 +1,5 @@
 import mongoose from "mongoose";
-import bcrypt from 'bcrypt'
+// import bcrypt from 'bcrypt'
 
 
 const userSchema = new mongoose.Schema({
@@ -22,6 +22,11 @@ const userSchema = new mongoose.Schema({
         minlength: [7, 'Password should be more than 5 characters!'],
 
         trim: true,
+    },
+    roles:{
+        type:String,
+        enum:['teacher','student','admin'],
+        default:'student'
     },
     token: {
         type: String,

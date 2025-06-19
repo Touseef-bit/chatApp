@@ -3,6 +3,7 @@ import dotenv from 'dotenv'
 import connectToDb from './utils/Db.js'
 import errorMiddleware from './middleware/errorMiddleware.js'
 import authRouter from './routes/authRoutes.js'
+import cors from 'cors'
 import messageRouter from './routes/messageRoutes.js'
 dotenv.config()
 
@@ -15,6 +16,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use('/api', authRouter)
 app.use('/api', messageRouter)
+
+app.use(cors({
+  origin: '*',
+  methods: ['GET', 'POST', 'PUT', 'DELETE'],
+  credentials: true
+}));
 
 app.listen(PORT, () => {
     connectToDb()
