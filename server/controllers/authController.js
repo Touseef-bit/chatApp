@@ -24,11 +24,7 @@ export const signup = async (req, res, next) => {
     return res.status(200).json({
         success: true,
         message: 'User created Successfully!',
-        user: {
-            username,
-            email
-        },
-        token
+        user:newUser
     })
 }
 export const Login = async (req, res, next) => {
@@ -44,9 +40,10 @@ export const Login = async (req, res, next) => {
     if (!comparePassword) {
         return next(new appError("Email or Password is incorrect!", 400))
     }
+    user.password = undefined
     return res.status(200).json({
         success: true,
         message: 'Login Successfully!',
-        token: user.token  
+        user,
     })
 }

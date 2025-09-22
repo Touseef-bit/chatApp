@@ -1,0 +1,10 @@
+:fullscreen .child-div {
+    width: 100%;
+    height: 100%;
+}
+
+:fullscreen .child-div video{
+    flex: 1;
+    border: 2px solid red;
+    /* align-items: stretch; */
+}

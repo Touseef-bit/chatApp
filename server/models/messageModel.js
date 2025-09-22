@@ -1,20 +1,35 @@
 import mongoose from 'mongoose'
 
-const messageSchema = new mongoose.Schema({
+const messageSchema = new mongoose.Schema(
+  {
     message: {
-        type: String,
-        required: [true, 'Message is required!']
+      type: String,
     },
     senderId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'user'
+      type: mongoose.Types.ObjectId,
+      ref: "user",
     },
     recieverId: {
-        type: mongoose.Types.ObjectId,
-        ref: 'user'
+      type: mongoose.Types.ObjectId,
+      ref: "user",
     },
-}, { timestamps: true })
+    files: [
+      {
+        url: { type: String, required: true },
+        public_id: { type: String }, 
+        filename: { type: String }, 
+        mimetype: { type: String },
+      },
+    ],
+    voiceMessage:{
+      type: mongoose.Types.ObjectId,
+      ref: "voice",
+    }
+  },
+  { timestamps: true }
+);
 
-const messageModel = new mongoose.model('message',messageSchema)
+
+const messageModel = new mongoose.model('messages', messageSchema)
 
 export default messageModel

@@ -7,7 +7,7 @@ const userSchema = new mongoose.Schema({
         type: String,
         unique: true,
         required: true,
-        minlength: [5, 'Username should be more than 5 characters!'],
+        minlength: [3, 'Username should be more than 3 characters!'],
         trim: true,
     },
     email: {
@@ -19,25 +19,41 @@ const userSchema = new mongoose.Schema({
     password: {
         type: String,
         required: true,
-        minlength: [7, 'Password should be more than 5 characters!'],
+        minlength: [7, 'Password should be more than 7 characters!'],
 
         trim: true,
     },
-    roles:{
-        type:String,
-        enum:['teacher','student','admin'],
-        default:'student'
+    roles: {
+        type: String,
+        enum: ['teacher', 'student', 'admin'],
+        default: 'student'
+    },
+    profilePicture: {
+        type: {
+            url: { type: String, default: null }
+        },
+        default: null
     },
     token: {
         type: String,
-        default: undefined
-    }
+        default: null
+    },
 }, { timestamps: true })
 
 
 const usermodel = new mongoose.model('user', userSchema)
 
 export default usermodel
+
+userSchema.set("toJSON", {
+    transform(doc, ret) {
+        delete ret.password;
+        delete ret.__v;
+        // delete ret._id
+        delete ret.email;
+        return ret;
+    },
+});
 
 
 // userSchema.pre('save', async function (next) {

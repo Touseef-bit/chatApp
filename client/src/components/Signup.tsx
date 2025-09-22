@@ -11,58 +11,73 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { FaRegEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LiaEyeSolid } from "react-icons/lia";
 import type { user } from "../types/User";
-import axios, { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-import { toast } from "react-toastify";
+// import { toast } from "react-toastify";
+// import { api } from "@/lib/api.instance";
+import { SignUpUser } from "@/slices/authSlice";
+import { useDispatch, useSelector } from "react-redux";
+import type { AppDispatch, RootState } from "../store/store";
+import { useForm } from "@tanstack/react-form";
+import type { AnyFieldApi } from "@tanstack/react-form";
+// const API = "/signup";
 
-const API = "/api/signup";
+function FieldInfo({ field }: { field: AnyFieldApi }) {
+  return (
+    <>
+      {field.state.meta.isTouched && !field.state.meta.isValid ? (
+        <em>{field.state.meta.errors.join(", ")}</em>
+      ) : null}
+      {field.state.meta.isValidating ? "Validating..." : null}
+    </>
+  );
+}
 
 const SignUp = () => {
+  const dispatch = useDispatch<AppDispatch>();
+  const form = useForm({
+    defaultValues: {
+      username: "",
+      email: "",
+      password: "",
+    },
+    onSubmit: async ({ value }) => {
+    await dispatch(SignUpUser(value));
+    console.log("hey")
+    },
+  });
   const navigate = useNavigate();
   const [show, setshow] = useState<boolean>(false);
-  const [errmsg, seterrmsg] = useState<string>("");
-  const [pending, setpending] = useState<boolean>(false);
-  const [value, setValue] = useState<user>({
-    username: "",
-    email: "",
-    password: "",
-  });
+  const { user } = useSelector((state: RootState) => state.auth);
+  const token = user?.token;
   const showPassword = () => {
     setshow(!show);
   };
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue({ ...value, [e.target.name]: e.target.value });
-    seterrmsg("");
-  };
-  const handleSumbit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
-    try {
-      setpending(true);
-      const res = await axios.post(API, value);
-      const data = await res.data;
-      setpending(false);
-      if (data.success) {
-        navigate("/");
-        toast.success(data.message);
-        localStorage.setItem('token',data.token)
-      } else {
-        seterrmsg(data.message || "Something went wrong.");
-        toast.error(errmsg);
-      }
-    } catch (error: unknown) {
-      setpending(true);
-      const err = (await error) as AxiosError<{ message: string }>;
-      const errorMessage = err.response?.data?.message || "Server error";
-      toast.error(errorMessage);
-      setpending(false);
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setValue({ ...value, [e.target.name]: e.target.value });
+  // };
+  // const handleSumbit = async (e: React.FormEvent<HTMLFormElement>) => {
+  //   e.preventDefault();
+  //   dispatch(SignUpUser(value));
+  // };
+  useEffect(() => {
+    if (token) {
+      navigate("/");
     }
-  };
+  }, [token]);
+
   return (
     <Card className="w-full max-w-sm">
-      <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => handleSumbit(e)}>
+      <form
+        onSubmit={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          form.handleSubmit();
+        }}
+      >
         <CardContent>
           <CardHeader>
             <CardTitle className="text-xl text-center text-blue-600">
@@ -71,71 +86,118 @@ const SignUp = () => {
           </CardHeader>
           <div className="flex flex-col gap-6">
             <div className="grid gap-2 ">
-              <Label htmlFor="username" className="text-blue-600">
-                Username
-              </Label>
-              <Input
-                id="username"
-                value={value.username}
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(e)
-                }
+              <form.Field
                 name="username"
-                type="text"
-                placeholder="abc"
-                required
+                validators={{
+                  onChange: ({ value }) =>
+                    !value
+                      ? "username is required"
+                      : value.length < 3
+                      ? "username must be at least 3 characters"
+                      : undefined,
+                  onChangeAsyncDebounceMs: 500,
+                  onChangeAsync: async ({ value }) => {
+                    await new Promise((resolve) => setTimeout(resolve, 1000));
+                    return (
+                      value.includes("error") &&
+                      'No "error" allowed in first name'
+                    );
+                  },
+                }}
+                children={(field) => {
+                  return (
+                    <>
+                      <Label htmlFor={field.name} className="text-blue-600">
+                        Username
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        // onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        //   handleChange(e)
+                        // }
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        name={field.name}
+                        type="text"
+                        placeholder="abc"
+                        required
+                      />
+                      {
+                        !field.state.meta.isValid && (
+                          <span className="text-red-600">{field.state.meta.errors.join(', ')}</span>
+                        )
+                      }
+                    </>
+                  );
+                }}
               />
             </div>
+
             <div className="grid gap-2 ">
-              <Label htmlFor="email" className="text-blue-600">
-                Email
-              </Label>
-              <Input
-                id="email"
-                type="email"
+              <form.Field
                 name="email"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(e)
-                }
-                value={value.email}
-                placeholder="m@example.com"
-                required
+                children={(field) => {
+                  return (
+                    <>
+                      <Label htmlFor={field.name} className="text-blue-600">
+                        email
+                      </Label>
+                      <Input
+                        id={field.name}
+                        value={field.state.value}
+                        // onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                        //   handleChange(e)
+                        // }
+                        onChange={(e) => field.handleChange(e.target.value)}
+                        name={field.name}
+                        type="text"
+                        placeholder="abc"
+                        required
+                      />
+                    </>
+                  );
+                }}
               />
             </div>
             <div className="grid gap-2">
-              <div className="flex items-center">
-                <Label htmlFor="password" className="text-blue-600">
-                  Password
-                </Label>
-                <a
-                  href="#"
-                  className="ml-auto inline-block  text-blue-600 text-sm underline-offset-4 hover:underline"
-                >
-                  Forgot your password?
-                </a>
-              </div>
-              <div className="relative">
-                {!show ? (
-                  <FaRegEyeSlash
-                    onClick={() => showPassword()}
-                    className="absolute top-2 right-2  w-5 h-5 hover:text-blue-600 cursor-pointer duration-100 curor-pointer "
-                  />
-                ) : (
-                  <LiaEyeSolid
-                    onClick={() => showPassword()}
-                    className="absolute top-2 right-2  w-5 h-5 hover:text-blue-600 cursor-pointer duration-100 curor-pointer "
-                  />
-                )}
-                <Input
-                  id="password"
+              <div className="relative grid gap-2">
+                <form.Field
                   name="password"
-                  value={value.password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleChange(e)
-                  }
-                  type={`${show ? "text" : "password"}`}
-                  required
+                  children={(field) => {
+                    return (
+                      <>
+                        <Label htmlFor={field.name} className="text-blue-600">
+                          Password
+                        </Label>
+                        <Input
+                          id={field.name}
+                          value={field.state.value}
+                          // onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
+                          //   handleChange(e)
+                          // }
+                          onChange={(e) => field.handleChange(e.target.value)}
+                          name={field.name}
+                          type="text"
+                          placeholder="abc"
+                          required
+                        />
+                      </>
+                    );
+                  }}
                 />
+                <div className="absolute top-1/2 right-2">
+                  {!show ? (
+                    <FaRegEyeSlash
+                      onClick={() => showPassword()}
+                      className="  w-5 h-5 hover:text-blue-600 cursor-pointer duration-100 curor-pointer "
+                    />
+                  ) : (
+                    <LiaEyeSolid
+                      onClick={() => showPassword()}
+                      className="  w-5 h-5 hover:text-blue-600 cursor-pointer duration-100 curor-pointer "
+                    />
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -147,15 +209,19 @@ const SignUp = () => {
               className="text-blue-600 ml-1 underline underline-offset-2"
               to={"/login"}
             >
-              {!pending ? "Login" : "Loggin In..."}
+              Login
             </Link>
           </CardDescription>
-          <Button
-            type="submit"
-            className="w-full cursor-pointer bg-blue-600 hover:bg-blue-800 duration-200"
-          >
-            Signup
-          </Button>
+          <form.Subscribe
+            children={() => (
+              <Button
+                type="submit"
+                className="w-full cursor-pointer bg-blue-600 hover:bg-blue-800 duration-200"
+              >
+                Signup
+              </Button>
+            )}
+          />
         </CardFooter>
       </form>
     </Card>

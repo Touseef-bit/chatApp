@@ -14,11 +14,11 @@ const auth = async(req, res, next) => {
         return next(new appError('Login first!',401))
     }
     let decoded = jwt.verify(token,process.env.JWT_SECRET)
-    const user = await usermodel.findOne({username:decoded.username}).select('+token')
-    if(!user.token.includes(token)){
+    req.user = await usermodel.findOne({username:decoded.username}).select('+token')
+    if(!req.user.token.includes(token)){
         return next(new appError('Not Authorized!',401))
     }
-    req.user = decoded
+    req.token = req.user.token
     next()
 }
 

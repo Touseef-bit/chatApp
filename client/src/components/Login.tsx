@@ -12,57 +12,55 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Link } from "react-router-dom";
 import { FaRegEyeSlash } from "react-icons/fa";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LiaEyeSolid } from "react-icons/lia";
 import type { user } from "../types/User";
-import axios, { AxiosError } from "axios";
+// import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
+// import { toast } from "react-toastify";
+// import { api } from "@/lib/api.instance";
+import { useDispatch, useSelector } from "react-redux";
+import { LoginUser } from "@/slices/authSlice";
+import type { AppDispatch, RootState } from "@/store/store";
 import { toast } from "react-toastify";
 
-const API = "/api/login";
+// const API = "/login";
 
 const Login = () => {
   const navigate = useNavigate();
   const [show, setshow] = useState<boolean>(false);
-  const [errmsg, seterrmsg] = useState<string>("");
+  // const [errmsg, seterrmsg] = useState<string>("");/
+  const [pending, setpending] = useState<boolean>(false);
   const [value, setValue] = useState<user>({
-    email: "",
-    password: "",
+    email: "user001@gmail.com",
+    password: "12345678",
   });
+  const { user, errmsg } = useSelector((state: RootState) => state.auth);
+  const token = user?.token;
+  const dispatch = useDispatch<AppDispatch>();
   const showPassword = () => {
     setshow(!show);
-    seterrmsg("");
   };
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setValue({ ...value, [e.target.name]: e.target.value });
   };
   const handleSumbit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    try {
-      const res = await axios.post(API, value);
-      const data = await res.data;
-      if (data.success) {
-        navigate("/");
-        toast.success(data.message);
-        localStorage.setItem('token',data.token)
-      } else {
-        seterrmsg(data.message || "Something went wrong.");
-        toast.error(errmsg);
-      }
-    } catch (error: unknown) {
-      const err = await error as AxiosError;
-      const errorMessage =
-        err.response?.data &&
-        typeof err.response.data === "object" &&
-        "message" in err.response.data
-          ? (err.response.data as { message: string }).message
-          : "Something went wrong.";
+    setpending(true);
 
-      seterrmsg(errorMessage);
+    dispatch(LoginUser(value));
+    if (errmsg) {
       toast.error(errmsg);
-      console.log(error);
     }
+
+    setpending(false);
   };
+
+  useEffect(() => {
+    if (token) {
+      navigate("/");
+    }
+  }, [token]);
   return (
     <Card className="w-full max-w-sm">
       <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => handleSumbit(e)}>
@@ -141,7 +139,7 @@ const Login = () => {
             type="submit"
             className="w-full cursor-pointer bg-blue-600 hover:bg-blue-800  text-white duration-200"
           >
-            Login
+            {!pending ? "Login" : "Logging In..."}
           </Button>
         </CardFooter>
       </form>
