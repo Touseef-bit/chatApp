@@ -5,7 +5,6 @@ import {
   createSlice,
   // type PayloadAction,
 } from "@reduxjs/toolkit";
-import axios from "axios";
 
 type User = {
   _id: string;

@@ -2,16 +2,6 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import type { RootState } from "@/store/store";
 import { api } from "@/lib/api.instance";
 
-// "url": {
-//         "voice": {
-//             "url": "https://res.cloudinary.com/dtuw7udqm/video/upload/v1752827055/chatApp/file-1752827055779.webm"
-//         },
-//         "_id": "687a04b147c36f271e8be409",
-//         "createdAt": "2025-07-18T08:24:17.418Z",
-//         "updatedAt": "2025-07-18T08:24:17.418Z",
-//         "__v": 0
-//     }
-
 export type IVoice = {
   voice: {
     url: string;
@@ -70,16 +60,6 @@ const initialState: UserState = {
   error: "",
 };
 
-// type createRoom = {
-//   member: string[];
-//   messages: string[] | null;
-//   _id: string;
-//   __v: number;
-// };
-
-// type data = createRoom
-
-// const token = localStorage.getItem("token");
 export const fetchRoom = createAsyncThunk<Room[], void, { state: RootState }>(
   "user/fetchRoom",
   async (_, thunkAPI) => {
@@ -107,7 +87,6 @@ export const getMessages = createAsyncThunk<Room, void, { state: RootState }>(
         Authorization: `Bearer ${token}`,
       },
     });
-    // console.log(res.data.room)
     return res.data.room;
   }
 );
@@ -121,7 +100,6 @@ export const sendMessageinRoom = createAsyncThunk<
   const selectedUser = state.users.selectedUser;
   const token = state?.auth?.user?.token;
   const selectedRoom = state.rooms.selectedRoom;
-  // console.log(selectedRoom?._id);
   const res = await api.post(
     `/roommessage/${selectedRoom?._id}`,
     { message, receiverId: selectedUser?._id || null },
@@ -168,16 +146,13 @@ export const sendVoiceinRoom = createAsyncThunk<
   { state: RootState }
 >("message/sendmessage", async (fd, thunkAPI) => {
   const state = thunkAPI.getState();
-  // const selectedUser = state.users.selectedUser;
   const token = state?.auth?.user?.token;
   const selectedRoom = state.rooms.selectedRoom;
-  // console.log("form",FormData);
   const res = await api.post(`/roommessage/${selectedRoom?._id}`, fd, {
     headers: {
       Authorization: `Bearer ${token}`,
     },
   });
-  console.log(res.data)
   return res.data.voice;
 });
 

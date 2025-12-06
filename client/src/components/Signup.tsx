@@ -13,28 +13,11 @@ import { Link } from "react-router-dom";
 import { FaRegEyeSlash } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { LiaEyeSolid } from "react-icons/lia";
-import type { user } from "../types/User";
-// import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import { api } from "@/lib/api.instance";
 import { SignUpUser } from "@/slices/authSlice";
 import { useDispatch, useSelector } from "react-redux";
 import type { AppDispatch, RootState } from "../store/store";
 import { useForm } from "@tanstack/react-form";
-import type { AnyFieldApi } from "@tanstack/react-form";
-// const API = "/signup";
-
-function FieldInfo({ field }: { field: AnyFieldApi }) {
-  return (
-    <>
-      {field.state.meta.isTouched && !field.state.meta.isValid ? (
-        <em>{field.state.meta.errors.join(", ")}</em>
-      ) : null}
-      {field.state.meta.isValidating ? "Validating..." : null}
-    </>
-  );
-}
 
 const SignUp = () => {
   const dispatch = useDispatch<AppDispatch>();

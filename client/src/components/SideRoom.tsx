@@ -17,11 +17,7 @@ const SideRoom = () => {
   useEffect(() => {
     dispatch(fetchRoom());
   }, [dispatch]);
-  // useEffect(() => {
-  //   dispatch(fetchRoom(user.token));
-  // }, [dispatch,user.token]);
 
-  // console.log(Room)
   return (
     <>
       <section

@@ -31,7 +31,6 @@ export const sendMessage = catchAsync(async (req, res, next) => {
             recieverId: receiverId,
         });
     } else if (message) {
-
         newMessage = new messageModel({
             message,
             senderId,

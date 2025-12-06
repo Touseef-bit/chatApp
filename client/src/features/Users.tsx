@@ -8,17 +8,11 @@ import { getMessages, setSelectedRoom } from "@/slices/roomSlice";
 const Users = () => {
   const dispatch = useDispatch<AppDispatch>();
   const { users,loading } = useSelector((state: RootState) => state.users);
-  // const { Room } = useSelector((state: RootState) => state.rooms);
   useEffect(() => {
     dispatch(fetchUsers());
   }, [dispatch]);
-  // useEffect(() => {
-  //   if(!user) return
-  //   dispatch(fetchUsers(user?.token));
-  // }, [dispatch]);
 
   if (loading) return <p>loading...</p>;
-  // if (error) return <p>{error}</p>
   return (
     <>
       <ul className="flex w-full flex-col gap-2">

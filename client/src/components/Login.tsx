@@ -15,21 +15,15 @@ import { FaRegEyeSlash } from "react-icons/fa";
 import { useEffect, useState } from "react";
 import { LiaEyeSolid } from "react-icons/lia";
 import type { user } from "../types/User";
-// import { AxiosError } from "axios";
 import { useNavigate } from "react-router-dom";
-// import { toast } from "react-toastify";
-// import { api } from "@/lib/api.instance";
 import { useDispatch, useSelector } from "react-redux";
 import { LoginUser } from "@/slices/authSlice";
 import type { AppDispatch, RootState } from "@/store/store";
 import { toast } from "react-toastify";
 
-// const API = "/login";
-
 const Login = () => {
   const navigate = useNavigate();
   const [show, setshow] = useState<boolean>(false);
-  // const [errmsg, seterrmsg] = useState<string>("");/
   const [pending, setpending] = useState<boolean>(false);
   const [value, setValue] = useState<user>({
     email: "user001@gmail.com",
@@ -61,6 +55,7 @@ const Login = () => {
       navigate("/");
     }
   }, [token]);
+
   return (
     <Card className="w-full max-w-sm">
       <form onSubmit={(e: React.FormEvent<HTMLFormElement>) => handleSumbit(e)}>
@@ -77,9 +72,7 @@ const Login = () => {
               </Label>
               <Input
                 id="email"
-                onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                  handleChange(e)
-                }
+                onChange={handleChange}
                 value={value.email}
                 name="email"
                 type="email"
@@ -103,9 +96,7 @@ const Login = () => {
                 <Input
                   id="password"
                   value={value.password}
-                  onChange={(e: React.ChangeEvent<HTMLInputElement>) =>
-                    handleChange(e)
-                  }
+                  onChange={handleChange}
                   name="password"
                   type={`${show ? "text" : "password"}`}
                   required
