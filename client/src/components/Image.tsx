@@ -4,12 +4,12 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 
 interface ImageProps {
   fallback?: string;
-  url?: string | null;
+  url: string | undefined;
 }
 
 const Image: React.FC<ImageProps> = ({
   fallback = "NA",
-  url,
+  url = undefined,
 }) => {
   // const [preview, setPreview] = useState<string>(defaultSrc);
   // const fileInputRef = useRef<HTMLInputElement | null>(null);
@@ -52,7 +52,7 @@ const Image: React.FC<ImageProps> = ({
       // onClick={handleAvatarClick}
       // className={canUpload ? "cursor-pointer hover:opacity-80" : ""}
       >
-        <AvatarImage src={url || undefined} alt="User Avatar" />
+        <AvatarImage src={url} alt="User Avatar" />
         <AvatarFallback>{fallback}</AvatarFallback>
       </Avatar>
     </>

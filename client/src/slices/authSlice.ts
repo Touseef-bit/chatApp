@@ -34,7 +34,7 @@ type value = {
 };
 
 type UserState = {
-  user: User | null;
+  user: User;
   profileLoading: boolean;
   ProfilePic: string | undefined;
   errmsg: string | null;
@@ -42,7 +42,7 @@ type UserState = {
 };
 
 const initialState: UserState = {
-  user: null,
+  user: {} as User,
   profileLoading: false,
   ProfilePic: undefined,
   errmsg: null,
@@ -105,7 +105,7 @@ const authSlice = createSlice({
   initialState,
   reducers: {
     logout: (state) => {
-      state.user = null;
+      state.user = {} as User;
       state.loading = false;
     },
   },

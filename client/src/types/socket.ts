@@ -9,12 +9,12 @@ export type url = {
 
 type data = {
   userId?: string;
-  profilePicture? : {
-    url:string,
-    _id:string
+  profilePicture?: {
+    url: string,
+    _id: string
   }
   user?: User;
-  roomId?: string;
+  roomId?: string | null;
   message?: string | null;
   files?: url[];
   createdAt?: Date;

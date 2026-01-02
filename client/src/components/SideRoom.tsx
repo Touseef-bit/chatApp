@@ -1,7 +1,11 @@
 import { useEffect, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import type { RootState, AppDispatch } from "../store/store";
-import { fetchRoom, setSelectedRoom } from "@/slices/roomSlice";
+import {
+  fetchRoom,
+  getRoomMessages,
+  setSelectedRoom,
+} from "@/slices/roomSlice";
 import { FaArrowLeft } from "react-icons/fa6";
 import Image from "./Image";
 import { setSelectedUser } from "@/slices/userSlice";
@@ -40,29 +44,25 @@ const SideRoom = () => {
         <ul className="w-full py-2 px-4">
           {Room &&
             Room.map((el, ind) => {
-              const otherMember = el.members.find(
-                (member) => member._id !== user?._id
-              );
+              const otherMember = el.members?.find((m) => m._id !== user?._id);
+              const displayName = el.roomName || (el.friend ? el.friend.name : otherMember?.username);
+              const displayAvatar = el.profilePicture?.url || (el.friend ? el.friend.avatar : otherMember?.profilePicture?.url);
 
               return (
                 <li
                   key={ind}
-                  className="flex gap-3  py-2 hover:bg-gray-200 rounded-2xl px-3 cursor-pointer duration-200 items-center"
+                  className="flex gap-3 py-2 hover:bg-gray-200 rounded-2xl px-3 cursor-pointer duration-200 items-center"
                   onClick={() => {
                     dispatch(setSelectedRoom({ el, otherMember }));
                     dispatch(setSelectedUser(null));
+                    dispatch(getRoomMessages());
                   }}
                 >
-                  {el.members.length == 2 && (
-                    <Image
-                      url={
-                        otherMember?.profilePicture
-                          ? otherMember.profilePicture.url
-                          : null
-                      }
-                    />
-                  )}
-                  <h3>{el.roomName ?? otherMember?.username}</h3>
+                  <Image
+                    url={displayAvatar}
+                    fallback={displayName?.charAt(0).toUpperCase() || "C"}
+                  />
+                  <h3>{displayName}</h3>
                 </li>
               );
             })}

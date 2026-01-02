@@ -1,6 +1,7 @@
-import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import { createSlice, createAsyncThunk, createSelector } from "@reduxjs/toolkit";
 import type { RootState } from "@/store/store";
 import { api } from "@/lib/api.instance";
+import type { ChatMessage } from "@/components/Message";
 
 export type IVoice = {
   voice: {
@@ -36,26 +37,29 @@ export type Room = {
     recieverId?: {
       username: string;
     };
-    createdAt?: string;
-    updatedAt?: string;
     __v?: number;
   }[];
+  friend?: {
+    id: string;
+    name: string;
+    avatar: string;
+  };
   __v: number;
 };
 type UserState = {
   Room: Room[];
-  userMessages: Room | null;
-  selectedRoom: Room | null;
+  messages: Record<string, ChatMessage[]>;
+  selectedRoom: Room;
   loading: boolean;
   error: string;
-  voice: IVoice | null;
+  voice: IVoice;
 };
 
 const initialState: UserState = {
   Room: [],
-  voice: null,
-  userMessages: null,
-  selectedRoom: null,
+  messages: {},
+  voice: {} as IVoice,
+  selectedRoom: {} as Room,
   loading: false,
   error: "",
 };
@@ -66,7 +70,7 @@ export const fetchRoom = createAsyncThunk<Room[], void, { state: RootState }>(
     const state = thunkAPI.getState();
     const token = state.auth.user?.token;
 
-    const response = await api.get("/getRoom", {
+    const response = await api.get("/room", {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -76,20 +80,26 @@ export const fetchRoom = createAsyncThunk<Room[], void, { state: RootState }>(
   }
 );
 
-export const getMessages = createAsyncThunk<Room, void, { state: RootState }>(
-  "messages/getMessages",
-  async (_, thunkAPI) => {
-    const state = thunkAPI.getState();
-    const selectedUser = state.users.selectedUser;
-    const token = state.auth.user?.token;
-    const res = await api.get(`/getMessages/${selectedUser?._id}`, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-    return res.data.room;
-  }
-);
+interface getRoomMessage {
+  messages: ChatMessage[];
+  roomId: string;
+}
+
+export const getRoomMessages = createAsyncThunk<
+  getRoomMessage,
+  void,
+  { state: RootState }
+>("messages/getMessages", async (_, thunkAPI) => {
+  const state = thunkAPI.getState();
+  const selectedRoomId = state.rooms.selectedRoom._id;
+  const token = state.auth.user?.token;
+  const res = await api.get(`/room/${selectedRoomId}`, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
+  return { messages: res.data.data.messages, roomId: selectedRoomId };
+});
 
 export const sendMessageinRoom = createAsyncThunk<
   unknown,
@@ -160,22 +170,44 @@ const roomSlice = createSlice({
   name: "room",
   initialState,
   reducers: {
-    setSelectedRoom: (state, { payload }) => {
-      if (!payload) {
-        state.selectedRoom = null;
-        return;
+    addMessage: (state, { payload }) => {
+      const roomId = state.selectedRoom?._id;
+      if (state.messages[roomId]) {
+        state.messages[roomId].push(payload);
+      } else {
+        state.messages[roomId] = [payload];
       }
+    },
+    setMessages: (state, { payload }) => {
+      state.messages = payload;
+    },
+    setSelectedRoom: (state, { payload }) => {
+      if (!payload) return;
       const { el, otherMember } = payload;
       state.selectedRoom = { ...el };
 
       if (state.selectedRoom) {
-        if (!state.selectedRoom.roomName) {
-          state.selectedRoom.roomName = el.roomName || otherMember?.username;
+        // Priority 1: User-defined Room Name (GroupName)
+        if (el.roomName) {
+          state.selectedRoom.roomName = el.roomName;
         }
-
-        if (!state.selectedRoom.profilePicture) {
-          state.selectedRoom.profilePicture =
-            el.profilePicture || otherMember?.profilePicture;
+        // Priority 2: Pre-resolved friend (backend handled 1-to-1)
+        else if (state.selectedRoom.friend) {
+          state.selectedRoom.roomName = state.selectedRoom.friend.name;
+          state.selectedRoom.profilePicture = {
+            url: state.selectedRoom.friend.avatar,
+            _id: state.selectedRoom.friend.id
+          };
+        }
+        // Priority 3: Fallback username
+        else {
+          if (!state.selectedRoom.roomName) {
+            state.selectedRoom.roomName = otherMember?.username;
+          }
+          if (!state.selectedRoom.profilePicture) {
+            state.selectedRoom.profilePicture =
+              el.profilePicture || otherMember?.profilePicture;
+          }
         }
       }
     },
@@ -191,15 +223,24 @@ const roomSlice = createSlice({
     builder.addCase(createRoom.fulfilled, (state, action) => {
       state.Room.push(action.payload);
     });
-    builder.addCase(getMessages.fulfilled, (state, { payload }) => {
-      state.userMessages = payload;
+    builder.addCase(getRoomMessages.fulfilled, (state, { payload }) => {
+      state.messages[payload.roomId] = payload.messages;
     });
     builder.addCase(sendVoiceinRoom.fulfilled, (state, { payload }) => {
-      console.log(payload)
       state.voice = payload;
     });
   },
 });
 
-export const { setSelectedRoom } = roomSlice.actions;
+export const getSelectedRoomId = (state: RootState) =>
+  state.rooms.selectedRoom._id;
+
+export const getMessages = (state: RootState) => {
+  const roomId = state.rooms.selectedRoom._id
+  return state.rooms.messages[roomId] || [];
+}
+
+
+
+export const { setSelectedRoom, addMessage } = roomSlice.actions;
 export default roomSlice.reducer;

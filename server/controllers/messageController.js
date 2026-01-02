@@ -4,8 +4,7 @@ import roomModel from "../models/roomModel.js"
 import userModel from '../models/userModel.js'
 import catchAsync from '../utils/catchAsync.js'
 import voiceModel from '../models/voiceModel.js'
-
-
+import { io } from "../server.js"
 
 export const sendMessage = catchAsync(async (req, res, next) => {
     const receiverId = req.params.id;
@@ -102,8 +101,8 @@ export const sendMessageInRoom = catchAsync(async (req, res, next) => {
     await Promise.all([await room.save(), await newMessage.save()])
     return res.status(200).json({
         success: true,
-        message: 'message sent successfully!',
-        voice:voice
+        voice:voice,
+        message:newMessage
     })
 })
 
@@ -175,33 +174,6 @@ export const addMembers = catchAsync(async (req, res, next) => {
     })
 })
 
-
-export const getRooms = catchAsync(async (req, res, next) => {
-    const userToken = req.token;
-    const user = await userModel.findOne({ token: userToken })
-
-    const rooms = await roomModel.find({
-        members: { $in: [user._id] }
-    })
-        .populate([
-            { path: 'members', select: 'username profilePicture' },
-            {
-                path: 'messages',
-                // select: '',
-                populate: [
-                    { path: 'senderId', select: 'username profilePicture token -_id' },
-                    { path: 'recieverId', select: 'username profilePicture token -_id' },
-                    { path: 'voiceMessage' , select:"voice -_id " }
-                ]
-            }
-        ])
-
-    return res.status(200).json({
-        success: true,
-        rooms: rooms || roomName,
-    });
-});
-
 export const uploadProfile = catchAsync(async (req, res, next) => {
     const userToken = req.token
     const user = await userModel.findOne({ token: userToken })
@@ -241,6 +213,15 @@ export const sendfiles = catchAsync(async (req, res, next) => {
         });
         await Promise.all([await newRoom.save(), await newMessage.save()])
     }
+
+    // --- Real-time Socket Emission ---
+    io.emit("recieved_files", {
+        from: senderId,
+        files: fileObjects,
+        recieverId: recieverId,
+        createdAt: newMessage.createdAt
+    });
+
     res.status(200).json({ success: true, files: fileObjects });
 })
 
@@ -261,6 +242,15 @@ export const sendfilesInRoom = catchAsync(async (req, res, next) => {
     })
     existingRoom.messages.push(newMessage._id);
     await Promise.all([await existingRoom.save(), await newMessage.save()])
+
+    // --- Real-time Socket Emission (Group) ---
+    io.to(roomId).emit("recieved_files", {
+        from: senderId,
+        files: fileObjects,
+        roomId: roomId,
+        createdAt: newMessage.createdAt
+    });
+
     res.status(200).json({ success: true, files: fileObjects });
 })
 

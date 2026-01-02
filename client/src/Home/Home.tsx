@@ -9,7 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import type { RootState } from "@/store/store";
 import SideRoom from "@/components/SideRoom";
 import { sendMessage } from "@/slices/sendMessageSlice";
-import { sendMessageinRoom } from "@/slices/roomSlice";
+import { addMessage, sendMessageinRoom } from "@/slices/roomSlice";
 import type { AppDispatch } from "../store/store";
 // import FileUpload from "@/components/fileUploader";
 import { useRef } from "react";
@@ -30,6 +30,7 @@ import { Button } from "@/components/ui/button";
 import VoiceUploader from "@/components/VoiceUploader";
 import { CiVideoOn } from "react-icons/ci";
 import { CameraModal } from "@/components/ImageUploader";
+import { useSocket } from "@/context/Socket";
 
 // import UploadProfile from "@/components/UploadProfile";
 
@@ -37,9 +38,9 @@ const Home: React.FC = () => {
   const navigate = useNavigate();
   const { getMedia, incomingCallRoomId, handleEndCall } = useWebRtc();
   const [open, setOpen] = useState(false);
-
   // const socket = useSocket();
   const [value, setvalue] = useState<string>("");
+  const [message, setMessage] = useState<string>("");
   const selectedUser = useSelector(
     (state: RootState) => state.users.selectedUser
   );
@@ -53,36 +54,53 @@ const Home: React.FC = () => {
   const { user } = useSelector((state: RootState) => state.auth);
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
   const dispatch = useDispatch<AppDispatch>();
-  const [messages, setmessages] = useState<string>("");
+  const socket = useSocket();
+  const one_to_one_id = selectedUser ? [user?._id, selectedUser?._id].join("_") : null;
+  console.log(one_to_one_id)
+
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setvalue(e.target.value.toString());
+    setvalue(e.target.value);
   };
   // const { incomingCallRoomId } = useWebRtc();
   const sendMessagetoServer = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    if (selectedRoom) {
+    setMessage(value);
+    console.log("message sent", message);
+    if (selectedRoom?._id) {
       dispatch(sendMessageinRoom(value));
+      dispatch(
+        addMessage({
+          message: value,
+          type: "sent",
+          createdAt: new Date().toISOString(),
+          profilePicture: user?.profilePicture,
+        })
+      );
+      socket?.emit("sendMessage", {
+        userId: user?._id,
+        profilePicture: user?.profilePicture,
+        roomId: selectedRoom?._id,
+        message: value,
+      });
     } else {
+      console.log("hello")
       dispatch(sendMessage(value));
+      socket?.emit("sendMessage", {
+        userId: user?._id,
+        profilePicture: user?.profilePicture,
+        roomId: one_to_one_id,
+        message: value,
+      });
     }
-    setmessages(value);
     setvalue("");
-    // setmessages("")
   };
-  const url = selectedUser
-    ? selectedUser.profilePicture?.url ?? null
-    : selectedRoom?.profilePicture?.url ?? null;
   const token = user?.token;
   useEffect(() => {
     if (!token) {
       navigate("/login");
     }
   }, [token, selectedRoom]);
-
-  useEffect(() => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
-  }, [messages]);
-
   // const handleEndCall = () => {
   //   if (peer.current) {
   //     peer.current.getSenders().forEach((sender) => {
@@ -122,46 +140,14 @@ const Home: React.FC = () => {
                 <div className="flex space-x-3  h-8">
                   {selectedUser ? (
                     <Image
-                      url={
-                        selectedUser.profilePicture
-                          ? selectedUser.profilePicture.url
-                          : null
-                      }
+                      url={selectedUser.profilePicture?.url}
+                      fallback={selectedUser.username?.charAt(0).toUpperCase()}
                     />
-                  ) : selectedRoom ? (
-                    selectedRoom.members.length > 2 && (
-                      <div className="flex items-center -space-x-2">
-                        {selectedRoom.members.slice(0, 3).map((user, idx) => (
-                          <div
-                            key={user._id}
-                            className={`w-8 h-8 border-white rounded-full overflow-hidden z-${
-                              10 + idx
-                            }`}
-                          >
-                            <Image url={user?.profilePicture?.url || null} />
-                          </div>
-                        ))}
-                        {selectedRoom.members.length > 3 && (
-                          <div className="w-8 h-8 bg-gray-300 text-xs flex items-center justify-center rounded-full  border-white">
-                            +{selectedRoom.members.length - 3}
-                          </div>
-                        )}
-                      </div>
-                    )
                   ) : (
-                    <div className="flex items-center -space-x-2">
-                      <div
-                        className={`w-8 h-8 border-white rounded-full overflow-hidden`}
-                      >
-                        {/* <Image
-                          url={
-                            typeof selectedRoom?.profilePicture === 'object'
-    ? selectedRoom?.profilePicture?.url
-    : selectedRoom?.profilePicture || null;
-                          }
-                        /> */}
-                      </div>
-                    </div>
+                    <Image
+                      url={selectedRoom?.profilePicture?.url}
+                      fallback={selectedRoom?.roomName?.charAt(0).toUpperCase() || "R"}
+                    />
                   )}
                   <h4 className="font-semibold text-white text-lg">
                     {selectedUser
@@ -170,11 +156,11 @@ const Home: React.FC = () => {
                   </h4>
                 </div>
                 <div className="flex text-sm text-gray-300">
-                  {selectedRoom && selectedRoom.members.length > 2
+                  {selectedRoom.members && selectedRoom.members.length > 2
                     ? selectedRoom.members.slice(4).map((user) => {
-                        console.log("users", user);
-                        return <p key={user._id}>{user.username},</p>;
-                      })
+                      console.log("users", user);
+                      return <p key={user._id}>{user.username},</p>;
+                    })
                     : null}
                 </div>
                 <Dialog
@@ -219,7 +205,7 @@ const Home: React.FC = () => {
             </main>
           )}
           <div className="flex flex-col gap-3 overflow-y-auto px-2 py-2 my-3 grow">
-            <Message message={messages} />
+            <Message />
             <div ref={messagesEndRef} />
           </div>
           {(selectedRoom || selectedUser) && (
@@ -244,7 +230,7 @@ const Home: React.FC = () => {
                 <FileUpload onClick={(e) => e.preventDefault()} />
                 <VoiceUploader onClick={(e) => e.preventDefault()} />
                 {/* <CameraModal /> */}
-                <CameraModal/>
+                <CameraModal />
               </div>
             </form>
           )}

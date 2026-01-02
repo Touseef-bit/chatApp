@@ -80,10 +80,10 @@ export default function UploadProfileDialog() {
         <DialogClose asChild>
           <Button
             onClick={handleUpload}
-            disabled={!profileLoading}
+            disabled={profileLoading}
             className="w-1/2"
           >
-            {!profileLoading ? "Uploading..." : "Upload"}
+            {profileLoading ? "Uploading..." : "Upload"}
           </Button>
         </DialogClose>
       </CardFooter>

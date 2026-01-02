@@ -12,18 +12,18 @@ export default defineConfig({
       "@": path.resolve(__dirname, "./src"),
     },
   },
-  server: {
-    https: {
-      key: fs.readFileSync(
-        path.resolve(__dirname, "../server/cert/key.pem")
-      ),
-      cert: fs.readFileSync(
-        path.resolve(__dirname, "../server/cert/cert.pem")
-      ),
-    },
-    port: 5173,
-    host: "0.0.0.0",
-  },
+  // server: {
+  //   https: {
+  //     key: fs.readFileSync(
+  //       path.resolve(__dirname, "../server/cert/key.pem")
+  //     ),
+  //     cert: fs.readFileSync(
+  //       path.resolve(__dirname, "../server/cert/cert.pem")
+  //     ),
+  //   },
+  //   port: 5173,
+  //   host: "0.0.0.0",
+  // },
 });
 
 // vite.config.ts

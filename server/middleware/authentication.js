@@ -2,9 +2,10 @@ import appError from "../utils/appError.js"
 import dotenv from "dotenv"
 import jwt from 'jsonwebtoken'
 import usermodel from "../models/userModel.js"
+import catchAsync from "../utils/catchAsync.js"
 dotenv.config()
 
-const auth = async(req, res, next) => {
+const auth = catchAsync(async(req, res, next) => {
     let token;
     const {authorization} = req.headers
     if(authorization && authorization.startsWith('Bearer')){
@@ -20,6 +21,6 @@ const auth = async(req, res, next) => {
     }
     req.token = req.user.token
     next()
-}
+})
 
 export default auth

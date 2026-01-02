@@ -1,5 +1,5 @@
 import express from "express";
-import { addMembers, getRooms, sendfiles, sendMessage, sendMessageInRoom, getUserMessages, sendfilesInRoom, createRoom, uploadProfile } from "../controllers/messageController.js";
+import { addMembers, sendfiles, sendMessage, sendMessageInRoom, getUserMessages, sendfilesInRoom, createRoom, uploadProfile } from "../controllers/messageController.js";
 import auth from "../middleware/authentication.js";
 import upload from '../utils/cloudinary.js'
 
@@ -16,7 +16,6 @@ router.post('/roommessage/:id', auth, upload({
 }), sendMessageInRoom)
 router.post('/createRoom', auth, createRoom)
 router.post('/addMember/:id', auth, addMembers)
-router.get('/getRoom', auth, getRooms)
 router.post('/uploadFiles', auth, upload({
     allowedMimeTypes: [
         'image/png', 'image/jpeg', 'image/jpg',

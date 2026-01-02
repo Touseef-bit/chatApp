@@ -29,7 +29,7 @@ const SignUp = () => {
     },
     onSubmit: async ({ value }) => {
     await dispatch(SignUpUser(value));
-    console.log("hey")
+    // console.log("hey")
     },
   });
   const navigate = useNavigate();

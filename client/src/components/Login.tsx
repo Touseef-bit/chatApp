@@ -27,7 +27,7 @@ const Login = () => {
   const [pending, setpending] = useState<boolean>(false);
   const [value, setValue] = useState<user>({
     email: "user001@gmail.com",
-    password: "12345678",
+    password: "asdf",
   });
   const { user, errmsg } = useSelector((state: RootState) => state.auth);
   const token = user?.token;

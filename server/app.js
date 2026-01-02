@@ -6,6 +6,7 @@ import authRouter from './routes/authRoutes.js'
 import cors from 'cors'
 import messageRouter from './routes/messageRoutes.js'
 import userRouter from './routes/userRoutes.js'
+import roomRouter from './routes/roomRoutes.js'
 import { app, server } from './server.js'
 import https from 'https';
 import appError from './utils/appError.js'
@@ -41,6 +42,7 @@ app.use(express.urlencoded({ extended: true }));
 app.use('/api', authRouter)
 app.use('/api', messageRouter)
 app.use('/api', userRouter)
+app.use('/api', roomRouter)
 // app.all("*", (req, res, next) => {
 //   next(new appError(`Can't find ${req.originalUrl} on this server`, 404));
 // });

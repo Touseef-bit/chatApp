@@ -1,6 +1,7 @@
 import { createAsyncThunk, createSlice } from "@reduxjs/toolkit";
 import type { RootState } from "@/store/store";
 import { api } from "@/lib/api.instance";
+import type { ChatMessage } from "@/components/Message";
 // import type { Room } from "./roomSlice";
 
 type files = {
@@ -12,10 +13,12 @@ type files = {
 
 type State = {
   files: files[] | null;
+  loading: boolean;
 };
 
 const initialState: State = {
   files: [],
+  loading: false,
 };
 
 export const sendMessage = createAsyncThunk<
@@ -39,8 +42,6 @@ export const sendMessage = createAsyncThunk<
 
   return response.data.message;
 });
-
-
 
 export const uploadFiles = createAsyncThunk<
   files[], // return type (you can replace `any` with a better type if known)
@@ -74,14 +75,11 @@ export const sendVoice = createAsyncThunk<
   const selectedUser = state.users.selectedUser;
   const token = state?.auth?.user?.token;
 
-  const response = await api.post(
-    `/message/${selectedUser?._id}`, formData,
-    {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    }
-  );
+  const response = await api.post(`/message/${selectedUser?._id}`, formData, {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });
 
   return response.data.message;
 });
@@ -89,12 +87,21 @@ export const sendVoice = createAsyncThunk<
 const messageSlice = createSlice({
   name: "sendMessage",
   initialState,
-  reducers: {},
+  reducers: {
+  },
   extraReducers: (builder) => {
+    builder.addCase(uploadFiles.pending, (state) => {
+      state.loading = true;
+    });
     builder.addCase(uploadFiles.fulfilled, (state, { payload }) => {
       state.files = payload;
+      state.loading = false;
+    });
+    builder.addCase(uploadFiles.rejected, (state) => {
+      state.loading = false;
     });
   },
 });
+
 
 export default messageSlice.reducer;
